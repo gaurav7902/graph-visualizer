@@ -297,7 +297,8 @@ export function createGraphRenderer(
                 !related ||
                 (related.has(edge.source.id) && related.has(edge.target.id));
             const linkAlpha = (active ? 0.6 : 0.1) * reveal;
-            const edgeColor = related && active ? highlightColor() : defaultEdgeColor;
+            const edgeColor =
+                related && active ? highlightColor() : defaultEdgeColor;
             graphic.clear();
             graphic.lineStyle(
                 Math.min(

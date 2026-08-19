@@ -61,16 +61,18 @@ export function setupUI(renderer: GraphRenderer) {
         renderer.updateOptions({themeMode: theme});
     });
 
-    document.querySelectorAll<HTMLButtonElement>(".btn-color-chip").forEach((chip) => {
-        chip.addEventListener("click", () => {
-            const color = chip.getAttribute("data-color");
-            if (color) {
-                highlightColorPicker.value = color;
-                applyAccentColor(color);
-                updateRenderer();
-            }
+    document
+        .querySelectorAll<HTMLButtonElement>(".btn-color-chip")
+        .forEach((chip) => {
+            chip.addEventListener("click", () => {
+                const color = chip.getAttribute("data-color");
+                if (color) {
+                    highlightColorPicker.value = color;
+                    applyAccentColor(color);
+                    updateRenderer();
+                }
+            });
         });
-    });
 
     highlightColorPicker.addEventListener("input", () => {
         applyAccentColor(highlightColorPicker.value);
@@ -149,17 +151,19 @@ export function setupUI(renderer: GraphRenderer) {
     tabCustom.addEventListener("click", () => switchTab("custom"));
     tabPreset.addEventListener("click", () => switchTab("preset"));
 
-    document.querySelectorAll<HTMLButtonElement>(".btn-chip").forEach((chip) => {
-        chip.addEventListener("click", () => {
-            const key = chip.getAttribute("data-preset");
-            if (key && PRESETS[key]) {
-                customEdgesTextarea.value = PRESETS[key].text;
-                customNodeCountInput.value = String(PRESETS[key].nodes);
-                updateParseBadge();
-                triggerRegeneration(true);
-            }
+    document
+        .querySelectorAll<HTMLButtonElement>(".btn-chip")
+        .forEach((chip) => {
+            chip.addEventListener("click", () => {
+                const key = chip.getAttribute("data-preset");
+                if (key && PRESETS[key]) {
+                    customEdgesTextarea.value = PRESETS[key].text;
+                    customNodeCountInput.value = String(PRESETS[key].nodes);
+                    updateParseBadge();
+                    triggerRegeneration(true);
+                }
+            });
         });
-    });
 
     function updateMaxEdgeBounds() {
         const max = Math.max(0, (currentNodes * (currentNodes - 1)) / 2);
@@ -195,8 +199,7 @@ export function setupUI(renderer: GraphRenderer) {
         if (debounceTimer) clearTimeout(debounceTimer);
         const doGen = () => {
             if (activeTab === "custom") {
-                const minNodes =
-                    parseInt(customNodeCountInput.value, 10) || 0;
+                const minNodes = parseInt(customNodeCountInput.value, 10) || 0;
                 const parsed = parseCustomGraph(
                     customEdgesTextarea.value,
                     minNodes,
