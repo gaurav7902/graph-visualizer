@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Force Graph Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/ui/controls.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Canvas Host -->
+      <main id="graph"></main>
+
+      <!-- Top Toolbar -->
+      <header class="top-bar">
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="6" cy="6" r="3" />
+            <circle cx="18" cy="6" r="3" />
+            <circle cx="12" cy="18" r="3" />
+            <line x1="8.5" y1="7.5" x2="15.5" y2="7.5" />
+            <line x1="7.5" y1="8.5" x2="10.5" y2="15.5" />
+            <line x1="16.5" y1="8.5" x2="13.5" y2="15.5" />
+          </svg>
+          <span class="title">Graph Visualizer</span>
+        </div>
+
+        <div class="status-pill" id="statusPill">
+          <span class="status-dot"></span>
+          <span id="statusText">Generating...</span>
+        </div>
+
+        <div class="actions">
+          <button id="fitBtn" class="btn btn-icon" title="Reset View Zoom/Center">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            </svg>
+            <span>Fit</span>
+          </button>
+
+          <button id="animateBtn" class="btn btn-icon" title="Re-run Reveal Animation">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <span>Animate</span>
+          </button>
+
+          <button id="settingsToggle" class="btn btn-primary btn-icon" aria-expanded="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+            <span>Controls</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Sidebar Controls Panel -->
+      <aside id="settingsPanel" class="settings-panel">
+        <div class="panel-header">
+          <h2>Graph Settings</h2>
+          <button id="closeSettings" class="btn-close" aria-label="Close settings">&times;</button>
+        </div>
+
+        <div class="panel-body">
+          <!-- Section 1: Graph Input & Generator -->
+          <section class="panel-section">
+            <h3 class="section-title">Graph Source</h3>
+
+            <!-- Mode Selector Tabs -->
+            <div class="mode-tabs">
+              <button id="tabCustom" class="tab-btn active" type="button">Custom Input</button>
+              <button id="tabPreset" class="tab-btn" type="button">Generator</button>
+            </div>
+
+            <!-- Custom Input Container -->
+            <div id="customInputGroup" class="input-container">
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="customNodeCount">Node Count (Min)</label>
+                  <input type="number" id="customNodeCount" class="num-input" value="6" min="1" max="2000" />
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="customEdges">Edges <span class="hint">{u, v} pairs</span></label>
+                  <span id="customParseBadge" class="parse-badge">5 edges</span>
+                </div>
+                <textarea
+                  id="customEdges"
+                  class="textarea-input"
+                  rows="5"
+                  placeholder="{1, 2}&#10;{2, 3}&#10;{3, 4}&#10;{4, 1}&#10;{1, 3}"
+                  spellcheck="false"
+>{1, 2}
+{2, 3}
+{3, 4}
+{4, 1}
+{1, 3}</textarea>
+              </div>
+
+              <div class="presets-row">
+                <span class="preset-label">Presets:</span>
+                <button type="button" class="btn-chip" data-preset="sample">Sample</button>
+                <button type="button" class="btn-chip" data-preset="star">Star</button>
+                <button type="button" class="btn-chip" data-preset="cycle">Cycle</button>
+                <button type="button" class="btn-chip" data-preset="mesh">Mesh</button>
+              </div>
+            </div>
+
+            <!-- Generator Input Container (shown when Generator tab active) -->
+            <div id="presetInputGroup" class="input-container hidden">
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="nodeCount">Node Count</label>
+                  <input type="number" id="nodeCount" class="num-input" value="80" min="1" max="2000" />
+                </div>
+                <input type="range" id="nodeCountRange" min="1" max="500" value="80" />
+              </div>
+
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="edgeCount">Edge Count <span id="maxEdgesHint" class="hint"></span></label>
+                  <input type="number" id="edgeCount" class="num-input" value="120" min="0" />
+                </div>
+                <input type="range" id="edgeCountRange" min="0" max="1000" value="120" />
+              </div>
+            </div>
+
+            <button id="regenerateBtn" class="btn btn-block btn-accent">
+              Render Graph
+            </button>
+          </section>
+
+          <!-- Section 2: Appearance & Themes -->
+          <section class="panel-section">
+            <h3 class="section-title">Appearance & Theme</h3>
+
+            <div class="control-group">
+              <label for="themeSelect">Website Theme</label>
+              <select id="themeSelect" class="select-input">
+                <option value="dark">Dark Mode</option>
+                <option value="light">Light Mode</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <div class="label-row">
+                <label for="highlightColor">Accent Color</label>
+              </div>
+              <div class="accent-row">
+                <input type="color" id="highlightColor" class="color-input" value="#a600ff" />
+                <button type="button" class="btn-color-chip" data-color="#a600ff" style="background: #a600ff" title="Purple"></button>
+                <button type="button" class="btn-color-chip" data-color="#00f0ff" style="background: #00f0ff" title="Cyan"></button>
+                <button type="button" class="btn-color-chip" data-color="#10b981" style="background: #10b981" title="Emerald"></button>
+                <button type="button" class="btn-color-chip" data-color="#ef4444" style="background: #ef4444" title="Crimson"></button>
+                <button type="button" class="btn-color-chip" data-color="#f59e0b" style="background: #f59e0b" title="Amber"></button>
+                <button type="button" class="btn-color-chip" data-color="#ec4899" style="background: #ec4899" title="Pink"></button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 3: Display Filters -->
+          <section class="panel-section">
+            <h3 class="section-title">Display & Filters</h3>
+
+            <div class="control-group">
+              <label for="search">Filter Search</label>
+              <input type="text" id="search" class="text-input" placeholder="Search node labels..." />
+            </div>
+
+            <div class="control-grid">
+              <label class="toggle-row">
+                <span>Show Labels</span>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="labels" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-row">
+                <span>Directional Arrows</span>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="arrows" />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-row">
+                <span>Show Orphans</span>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="orphans" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+            </div>
+
+            <div class="control-group margin-top">
+              <div class="label-row">
+                <label for="nodeSize">Node Size</label>
+                <output for="nodeSize" class="range-value">50</output>
+              </div>
+              <input type="range" id="nodeSize" min="10" max="200" value="50" />
+            </div>
+
+            <div class="control-group">
+              <div class="label-row">
+                <label for="linkWidth">Link Thickness</label>
+                <output for="linkWidth" class="range-value">50</output>
+              </div>
+              <input type="range" id="linkWidth" min="10" max="200" value="50" />
+            </div>
+          </section>
+
+          <!-- Section 3: Advanced Options (Initially Collapsed Accordion) -->
+          <details id="advancedOptions" class="advanced-accordion">
+            <summary class="accordion-summary">
+              <span class="summary-title">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                Advanced Options
+              </span>
+              <svg class="chevron-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </summary>
+
+            <div class="accordion-content">
+              <div class="control-group">
+                <label for="generatorMode">Generator Algorithm</label>
+                <select id="generatorMode" class="select-input">
+                  <option value="preferential">Preferential Attachment (Barabási–Albert)</option>
+                  <option value="random">Random (Erdős–Rényi)</option>
+                </select>
+              </div>
+
+              <!-- Physics Forces -->
+              <h4 class="sub-section-title">Physics Forces</h4>
+
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="centerForce">Center Gravity</label>
+                  <output for="centerForce" class="range-value">8</output>
+                </div>
+                <input type="range" id="centerForce" min="0" max="50" value="8" />
+              </div>
+
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="repelForce">Repulsion Force</label>
+                  <output for="repelForce" class="range-value">100</output>
+                </div>
+                <input type="range" id="repelForce" min="0" max="500" value="100" />
+              </div>
+
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="linkForce">Link Strength</label>
+                  <output for="linkForce" class="range-value">30</output>
+                </div>
+                <input type="range" id="linkForce" min="0" max="100" value="30" />
+              </div>
+
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="linkDistance">Link Distance</label>
+                  <output for="linkDistance" class="range-value">300</output>
+                </div>
+                <input type="range" id="linkDistance" min="20" max="800" value="300" />
+              </div>
+
+              <div class="control-group">
+                <div class="label-row">
+                  <label for="velocityDecay">Damping (Decay)</label>
+                  <output for="velocityDecay" class="range-value">0.4</output>
+                </div>
+                <input type="range" id="velocityDecay" min="0.1" max="0.9" step="0.05" value="0.4" />
+              </div>
+
+              <button id="resetBtn" class="btn btn-block btn-secondary margin-top">
+                Reset Default Settings
+              </button>
+            </div>
+          </details>
+        </div>
+      </aside>
+
+      <!-- Selection Info Card (shows when node clicked) -->
+      <div id="nodeInfoCard" class="node-info-card hidden">
+        <div class="info-card-header">
+          <span class="info-tag">Selected Node</span>
+          <button id="closeInfoCard" class="btn-close-sm">&times;</button>
+        </div>
+        <h3 id="infoNodeTitle" class="info-title">Node Title</h3>
+        <p id="infoNodeDetails" class="info-meta">0 connections</p>
+      </div>
+
+      <!-- Footer Badge -->
+      <footer class="footer-badge">
+        <span>Powered by standard Canvas 2D engine &bull; </span>
+        <a href="https://github.com/graph-visualizer/graph-visualizer.github.io" target="_blank" rel="noopener noreferrer">
+          GitHub Repository
+        </a>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
