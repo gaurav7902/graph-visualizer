@@ -19,6 +19,11 @@ export function setupUI(renderer: GraphRenderer) {
         document.querySelector<HTMLTextAreaElement>("#customEdges")!;
     const customParseBadge =
         document.querySelector<HTMLElement>("#customParseBadge")!;
+    const edgeListEl = document.querySelector<HTMLElement>("#edgeList")!;
+    const addEdgeInput =
+        document.querySelector<HTMLInputElement>("#addEdgeInput")!;
+    const addEdgeBtn =
+        document.querySelector<HTMLButtonElement>("#addEdgeBtn")!;
 
     const nodeCountInput =
         document.querySelector<HTMLInputElement>("#nodeCount")!;
@@ -46,6 +51,100 @@ export function setupUI(renderer: GraphRenderer) {
         document.querySelector<HTMLSelectElement>("#themeSelect")!;
     const highlightColorPicker =
         document.querySelector<HTMLInputElement>("#highlightColor")!;
+
+    const centerForceSlider =
+        document.querySelector<HTMLInputElement>("#centerForce")!;
+    const repelForceSlider =
+        document.querySelector<HTMLInputElement>("#repelForce")!;
+    const linkForceSlider =
+        document.querySelector<HTMLInputElement>("#linkForce")!;
+    const linkDistanceSlider =
+        document.querySelector<HTMLInputElement>("#linkDistance")!;
+    const velocityDecaySlider =
+        document.querySelector<HTMLInputElement>("#velocityDecay")!;
+
+    const fitBtn = document.querySelector<HTMLButtonElement>("#fitBtn")!;
+    const animateBtn =
+        document.querySelector<HTMLButtonElement>("#animateBtn")!;
+    const resetBtn = document.querySelector<HTMLButtonElement>("#resetBtn")!;
+    const settingsToggleBtn =
+        document.querySelector<HTMLButtonElement>("#settingsToggle")!;
+    const settingsPanel =
+        document.querySelector<HTMLElement>("#settingsPanel")!;
+    const closeSettingsBtn =
+        document.querySelector<HTMLButtonElement>("#closeSettings")!;
+    const statusText = document.querySelector<HTMLElement>("#statusText")!;
+
+    const websiteSettingsToggleBtn = document.querySelector<HTMLButtonElement>(
+        "#websiteSettingsToggle",
+    )!;
+    const websiteSettingsPanel = document.querySelector<HTMLElement>(
+        "#websiteSettingsPanel",
+    )!;
+    const closeWebsiteSettingsBtn = document.querySelector<HTMLButtonElement>(
+        "#closeWebsiteSettings",
+    )!;
+
+    const sidebarTabInput =
+        document.querySelector<HTMLButtonElement>("#sidebarTabInput")!;
+    const sidebarTabVisual =
+        document.querySelector<HTMLButtonElement>("#sidebarTabVisual")!;
+    const paneInput = document.querySelector<HTMLElement>("#paneInput")!;
+    const paneVisual = document.querySelector<HTMLElement>("#paneVisual")!;
+
+    // ── Sidebar Tab Navigation ──
+
+    function switchSidebarTab(tab: "input" | "visual") {
+        if (tab === "input") {
+            sidebarTabInput.classList.add("active");
+            sidebarTabVisual.classList.remove("active");
+            paneInput.classList.remove("hidden");
+            paneVisual.classList.add("hidden");
+        } else {
+            sidebarTabVisual.classList.add("active");
+            sidebarTabInput.classList.remove("active");
+            paneVisual.classList.remove("hidden");
+            paneInput.classList.add("hidden");
+        }
+    }
+
+    sidebarTabInput.addEventListener("click", () => switchSidebarTab("input"));
+    sidebarTabVisual.addEventListener("click", () =>
+        switchSidebarTab("visual"),
+    );
+
+    // ── Number Stepper Buttons ──
+
+    document
+        .querySelectorAll<HTMLButtonElement>(".stepper-btn")
+        .forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const targetId = btn.getAttribute("data-target");
+                const action = btn.getAttribute("data-action");
+                if (!targetId || !action) return;
+
+                const input = document.getElementById(
+                    targetId,
+                ) as HTMLInputElement | null;
+                if (!input) return;
+
+                const step = parseFloat(input.step) || 1;
+                const min = parseFloat(input.min) || 0;
+                const max = parseFloat(input.max) || Infinity;
+                let value = parseFloat(input.value) || 0;
+
+                if (action === "inc") {
+                    value = Math.min(max, value + step);
+                } else if (action === "dec") {
+                    value = Math.max(min, value - step);
+                }
+
+                input.value = String(value);
+                input.dispatchEvent(new Event("input", {bubbles: true}));
+            });
+        });
+
+    // ── Website Settings (Theme & Accent) ──
 
     function applyAccentColor(hexColor: string) {
         const root = document.documentElement;
@@ -78,28 +177,21 @@ export function setupUI(renderer: GraphRenderer) {
         applyAccentColor(highlightColorPicker.value);
     });
 
-    const centerForceSlider =
-        document.querySelector<HTMLInputElement>("#centerForce")!;
-    const repelForceSlider =
-        document.querySelector<HTMLInputElement>("#repelForce")!;
-    const linkForceSlider =
-        document.querySelector<HTMLInputElement>("#linkForce")!;
-    const linkDistanceSlider =
-        document.querySelector<HTMLInputElement>("#linkDistance")!;
-    const velocityDecaySlider =
-        document.querySelector<HTMLInputElement>("#velocityDecay")!;
+    function toggleWebsiteSettings(open?: boolean) {
+        const isOpen =
+            open ?? websiteSettingsPanel.classList.contains("closed");
+        websiteSettingsPanel.classList.toggle("closed", !isOpen);
+        websiteSettingsToggleBtn.setAttribute("aria-expanded", String(isOpen));
+    }
 
-    const fitBtn = document.querySelector<HTMLButtonElement>("#fitBtn")!;
-    const animateBtn =
-        document.querySelector<HTMLButtonElement>("#animateBtn")!;
-    const resetBtn = document.querySelector<HTMLButtonElement>("#resetBtn")!;
-    const settingsToggleBtn =
-        document.querySelector<HTMLButtonElement>("#settingsToggle")!;
-    const settingsPanel =
-        document.querySelector<HTMLElement>("#settingsPanel")!;
-    const closeSettingsBtn =
-        document.querySelector<HTMLButtonElement>("#closeSettings")!;
-    const statusText = document.querySelector<HTMLElement>("#statusText")!;
+    websiteSettingsToggleBtn.addEventListener("click", () =>
+        toggleWebsiteSettings(),
+    );
+    closeWebsiteSettingsBtn.addEventListener("click", () =>
+        toggleWebsiteSettings(false),
+    );
+
+    // ── Graph Settings ──
 
     let activeTab: "custom" | "preset" = "custom";
     let currentNodes = parseInt(nodeCountInput.value, 10) || 80;
@@ -109,22 +201,147 @@ export function setupUI(renderer: GraphRenderer) {
 
     const PRESETS: Record<string, {text: string; nodes: number}> = {
         sample: {
-            text: "{1, 2}\n{2, 3}\n{3, 4}\n{4, 1}\n{1, 3}",
+            text: "1, 2\n2, 3\n3, 4\n4, 1\n1, 3",
             nodes: 6,
         },
         star: {
-            text: "{Center, A}\n{Center, B}\n{Center, C}\n{Center, D}\n{Center, E}\n{Center, F}",
+            text: "Center, A\nCenter, B\nCenter, C\nCenter, D\nCenter, E\nCenter, F",
             nodes: 7,
         },
         cycle: {
-            text: "{A, B}\n{B, C}\n{C, D}\n{D, E}\n{E, A}",
+            text: "A, B\nB, C\nC, D\nD, E\nE, A",
             nodes: 5,
         },
         mesh: {
-            text: "{A, B}\n{A, C}\n{A, D}\n{B, C}\n{B, D}\n{C, D}",
+            text: "A, B\nA, C\nA, D\nB, C\nB, D\nC, D",
             nodes: 4,
         },
     };
+
+    type Edge = {key: string; source: string; target: string};
+    let edgeList: Edge[] = [];
+
+    function edgeKey(a: string, b: string): string {
+        return a < b ? `${a}---${b}` : `${b}---${a}`;
+    }
+
+    function addEdgeToList(source: string, target: string) {
+        source = source.trim();
+        target = target.trim();
+        if (!source || !target || source === target) return;
+        const key = edgeKey(source, target);
+        if (edgeList.some((e) => e.key === key)) return;
+        edgeList.push({key, source, target});
+        syncTextareaFromEdgeList();
+        renderEdgeList();
+        triggerRegeneration();
+    }
+
+    function removeEdgeFromList(key: string) {
+        edgeList = edgeList.filter((e) => e.key !== key);
+        syncTextareaFromEdgeList();
+        renderEdgeList();
+        triggerRegeneration();
+    }
+
+    function editEdgeFromList(key: string) {
+        const edge = edgeList.find((e) => e.key === key);
+        if (!edge) return;
+        const chip = edgeListEl.querySelector(
+            `.edge-chip[data-edge-key="${key}"]`,
+        );
+        if (!chip) return;
+        chip.classList.add("editing");
+        chip.innerHTML = `
+            <input type="text" class="edge-edit-input" value="${edge.source}" data-role="source" spellcheck="false" />
+            <span class="edge-sep">\u2192</span>
+            <input type="text" class="edge-edit-input" value="${edge.target}" data-role="target" spellcheck="false" />
+        `;
+        const sourceInput = chip.querySelector(
+            'input[data-role="source"]',
+        ) as HTMLInputElement;
+        const targetInput = chip.querySelector(
+            'input[data-role="target"]',
+        ) as HTMLInputElement;
+        sourceInput.focus();
+        sourceInput.select();
+
+        function save() {
+            if (!edge) return;
+            const newSource = sourceInput.value.trim();
+            const newTarget = targetInput.value.trim();
+            if (newSource && newTarget && newSource !== newTarget) {
+                const newKey = edgeKey(newSource, newTarget);
+                if (newKey !== key && edgeList.some((e) => e.key === newKey)) {
+                    renderEdgeList();
+                    return;
+                }
+                edge.source = newSource;
+                edge.target = newTarget;
+                edge.key = newKey;
+            }
+            syncTextareaFromEdgeList();
+            renderEdgeList();
+            triggerRegeneration();
+        }
+
+        sourceInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") {
+                renderEdgeList();
+            }
+            if (e.key === "Tab" && !e.shiftKey) {
+                e.preventDefault();
+                targetInput.focus();
+                targetInput.select();
+            }
+        });
+        targetInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") {
+                renderEdgeList();
+            }
+            if (e.key === "Shift" && e.shiftKey) {
+                e.preventDefault();
+                sourceInput.focus();
+                sourceInput.select();
+            }
+        });
+        sourceInput.addEventListener("blur", save);
+        targetInput.addEventListener("blur", save);
+    }
+
+    function renderEdgeList() {
+        edgeListEl.innerHTML = "";
+        for (const edge of edgeList) {
+            const chip = document.createElement("div");
+            chip.className = "edge-chip";
+            chip.setAttribute("data-edge-key", edge.key);
+            chip.innerHTML = `
+                <span class="edge-label">${edge.source} \u2192 ${edge.target}</span>
+                <button class="edge-edit-btn" title="Edit" data-action="edit">\u270E</button>
+                <button class="edge-delete-btn" title="Delete" data-action="delete">\u00D7</button>
+            `;
+            edgeListEl.appendChild(chip);
+        }
+    }
+
+    function syncTextareaFromEdgeList() {
+        customEdgesTextarea.value = edgeList
+            .map((e) => `${e.source}, ${e.target}`)
+            .join("\n");
+        updateParseBadge();
+    }
+
+    function syncEdgeListFromTextarea() {
+        const res = parseCustomGraph(customEdgesTextarea.value, 0);
+        edgeList = res.graph.links.map((link) => {
+            const source = String(link.source);
+            const target = String(link.target);
+            return {key: edgeKey(source, target), source, target};
+        });
+        renderEdgeList();
+    }
 
     function updateParseBadge() {
         const minNodes = parseInt(customNodeCountInput.value, 10) || 0;
@@ -159,6 +376,7 @@ export function setupUI(renderer: GraphRenderer) {
                 if (key && PRESETS[key]) {
                     customEdgesTextarea.value = PRESETS[key].text;
                     customNodeCountInput.value = String(PRESETS[key].nodes);
+                    syncEdgeListFromTextarea();
                     updateParseBadge();
                     triggerRegeneration(true);
                 }
@@ -225,9 +443,35 @@ export function setupUI(renderer: GraphRenderer) {
         }
     }
 
-    customEdgesTextarea.addEventListener("input", () => {
-        updateParseBadge();
-        triggerRegeneration();
+    edgeListEl.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+        const chip = target.closest(".edge-chip") as HTMLElement | null;
+        if (!chip) return;
+        const key = chip.getAttribute("data-edge-key")!;
+        if (target.closest('[data-action="delete"]')) {
+            removeEdgeFromList(key);
+        } else if (target.closest('[data-action="edit"]')) {
+            editEdgeFromList(key);
+        }
+    });
+
+    function handleAddEdge() {
+        const raw = addEdgeInput.value.trim();
+        if (!raw) return;
+        const parts = raw.split(/\s*[\,;\->]\s*|\s+/).filter(Boolean);
+        if (parts.length >= 2) {
+            addEdgeToList(parts[0], parts[1]);
+            addEdgeInput.value = "";
+            addEdgeInput.focus();
+        }
+    }
+
+    addEdgeBtn.addEventListener("click", handleAddEdge);
+    addEdgeInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddEdge();
+        }
     });
 
     customNodeCountInput.addEventListener("input", () => {
@@ -274,6 +518,8 @@ export function setupUI(renderer: GraphRenderer) {
         triggerRegeneration(true);
     });
 
+    // ── Graph option sync ──
+
     const updateRenderer = () => {
         syncValueDisplays();
         renderer.updateOptions({
@@ -313,13 +559,13 @@ export function setupUI(renderer: GraphRenderer) {
     fitBtn.addEventListener("click", () => renderer.fitGraph());
     animateBtn.addEventListener("click", () => renderer.restartAnimation());
 
+    // Reset only graph settings (not theme/accent)
     resetBtn.addEventListener("click", () => {
         labelsToggle.checked = true;
         arrowsToggle.checked = false;
         orphansToggle.checked = true;
         nodeSizeSlider.value = "50";
         linkWidthSlider.value = "50";
-        highlightColorPicker.value = "#a600ff";
         centerForceSlider.value = "8";
         repelForceSlider.value = "100";
         linkForceSlider.value = "30";
@@ -340,6 +586,7 @@ export function setupUI(renderer: GraphRenderer) {
 
     updateMaxEdgeBounds();
     syncValueDisplays();
+    syncEdgeListFromTextarea();
     updateParseBadge();
     triggerRegeneration(true);
 }
