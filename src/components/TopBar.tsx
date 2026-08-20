@@ -1,10 +1,11 @@
-import { Maximize2, Play, Palette, Settings } from "lucide-react";
+import { Maximize2, Play, Moon, Sun, Settings } from "lucide-react";
 import "./TopBar.css";
 
 interface TopBarProps {
     nodeCount: number;
     edgeCount: number;
     isSimulating?: boolean;
+    themeMode?: "dark" | "light";
     onFit: () => void;
     onAnimate: () => void;
     onThemeToggle: () => void;
@@ -15,6 +16,7 @@ export function TopBar({
     nodeCount,
     edgeCount,
     isSimulating,
+    themeMode = "dark",
     onFit,
     onAnimate,
     onThemeToggle,
@@ -61,13 +63,11 @@ export function TopBar({
                 </button>
 
                 <button className="btn btn-icon" onClick={onThemeToggle} title="Toggle theme">
-                    <Palette size={16} />
-                    <span className="btn-icon-label">Theme</span>
+                    {themeMode === "dark" ? <Sun size={16} /> : <Moon size={16} />}
                 </button>
 
                 <button className="btn btn-primary btn-icon" onClick={onSettingsToggle} title="Settings">
                     <Settings size={16} />
-                    <span className="btn-icon-label">Settings</span>
                 </button>
             </div>
         </header>

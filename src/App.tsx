@@ -176,6 +176,7 @@ export function App() {
             <TopBar
                 nodeCount={nodeCount}
                 edgeCount={edgeCount}
+                themeMode={themeSettings.mode}
                 onFit={() => rendererRef.current?.fitGraph()}
                 onAnimate={() => rendererRef.current?.restartAnimation()}
                 onThemeToggle={handleThemeToggle}

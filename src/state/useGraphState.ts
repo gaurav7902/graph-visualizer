@@ -1,5 +1,10 @@
-import { useState, useCallback } from "react";
-import type { GraphState, ViewSettings, SimulationSettings, ThemeSettings } from "./types";
+import {useState, useCallback} from "react";
+import type {
+    GraphState,
+    ViewSettings,
+    SimulationSettings,
+    ThemeSettings,
+} from "./types";
 
 export function edgeKey(a: string, b: string): string {
     return a < b ? `${a}---${b}` : `${b}---${a}`;
@@ -8,11 +13,11 @@ export function edgeKey(a: string, b: string): string {
 const DEFAULT_GRAPH_STATE: GraphState = {
     nodes: 6,
     edges: [
-        { key: "1---2", source: "1", target: "2" },
-        { key: "2---3", source: "2", target: "3" },
-        { key: "3---4", source: "3", target: "4" },
-        { key: "1---4", source: "1", target: "4" },
-        { key: "1---3", source: "1", target: "3" },
+        {key: "1---2", source: "1", target: "2"},
+        {key: "2---3", source: "2", target: "3"},
+        {key: "3---4", source: "3", target: "4"},
+        {key: "1---4", source: "1", target: "4"},
+        {key: "1---3", source: "1", target: "3"},
     ],
     nodeCount: 80,
     edgeCount: 120,
@@ -43,10 +48,16 @@ const DEFAULT_THEME_SETTINGS: ThemeSettings = {
 };
 
 export function useGraphState() {
-    const [graphState, setGraphState] = useState<GraphState>(DEFAULT_GRAPH_STATE);
-    const [viewSettings, setViewSettings] = useState<ViewSettings>(DEFAULT_VIEW_SETTINGS);
-    const [simulationSettings, setSimulationSettings] = useState<SimulationSettings>(DEFAULT_SIMULATION_SETTINGS);
-    const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME_SETTINGS);
+    const [graphState, setGraphState] =
+        useState<GraphState>(DEFAULT_GRAPH_STATE);
+    const [viewSettings, setViewSettings] = useState<ViewSettings>(
+        DEFAULT_VIEW_SETTINGS,
+    );
+    const [simulationSettings, setSimulationSettings] =
+        useState<SimulationSettings>(DEFAULT_SIMULATION_SETTINGS);
+    const [themeSettings, setThemeSettings] = useState<ThemeSettings>(
+        DEFAULT_THEME_SETTINGS,
+    );
 
     const addEdge = useCallback((source: string, target: string) => {
         const key = edgeKey(source, target);
@@ -54,7 +65,7 @@ export function useGraphState() {
             if (prev.edges.some((e) => e.key === key)) return prev;
             return {
                 ...prev,
-                edges: [...prev.edges, { key, source, target }],
+                edges: [...prev.edges, {key, source, target}],
             };
         });
     }, []);
@@ -67,24 +78,30 @@ export function useGraphState() {
     }, []);
 
     const clearEdges = useCallback(() => {
-        setGraphState((prev) => ({ ...prev, edges: [] }));
+        setGraphState((prev) => ({...prev, edges: []}));
     }, []);
 
     const updateGraphState = useCallback((updates: Partial<GraphState>) => {
-        setGraphState((prev) => ({ ...prev, ...updates }));
+        setGraphState((prev) => ({...prev, ...updates}));
     }, []);
 
     const updateViewSettings = useCallback((updates: Partial<ViewSettings>) => {
-        setViewSettings((prev) => ({ ...prev, ...updates }));
+        setViewSettings((prev) => ({...prev, ...updates}));
     }, []);
 
-    const updateSimulationSettings = useCallback((updates: Partial<SimulationSettings>) => {
-        setSimulationSettings((prev) => ({ ...prev, ...updates }));
-    }, []);
+    const updateSimulationSettings = useCallback(
+        (updates: Partial<SimulationSettings>) => {
+            setSimulationSettings((prev) => ({...prev, ...updates}));
+        },
+        [],
+    );
 
-    const updateThemeSettings = useCallback((updates: Partial<ThemeSettings>) => {
-        setThemeSettings((prev) => ({ ...prev, ...updates }));
-    }, []);
+    const updateThemeSettings = useCallback(
+        (updates: Partial<ThemeSettings>) => {
+            setThemeSettings((prev) => ({...prev, ...updates}));
+        },
+        [],
+    );
 
     const resetViewSettings = useCallback(() => {
         setViewSettings(DEFAULT_VIEW_SETTINGS);

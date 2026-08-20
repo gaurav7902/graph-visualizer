@@ -64,7 +64,8 @@
 }
 
 @keyframes pulse-dot {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
         opacity: 1;
     }
@@ -124,8 +125,7 @@
 }
 
 .btn-icon {
-    width: 36px;
-    padding: 0;
+    padding: 0 12px;
 }
 
 .btn-icon-label {
@@ -137,6 +137,7 @@
         display: none;
     }
     .btn-icon {
+        padding: 0;
         width: 36px;
     }
 }
